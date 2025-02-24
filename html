@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kế Hoạch Dinh Dưỡng & Tập Luyện Cá Nhân</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-4xl" id="reportSection">
+        <h1 class="text-3xl font-bold text-center text-blue-700 mb-6">📋 Báo Cáo Kế Hoạch Cá Nhân</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <input id="name" type="text" placeholder="Tên hội viên" class="border rounded-xl p-2">
+            <input id="contact" type="text" placeholder="Liên hệ (SĐT/Email)" class="border rounded-xl p-2">
+            <input id="weight" type="number" placeholder="Cân nặng hiện tại (kg)" class="border rounded-xl p-2">
+            <input id="height" type="number" placeholder="Chiều cao (cm)" class="border rounded-xl p-2">
+            <input id="age" type="number" placeholder="Tuổi" class="border rounded-xl p-2">
+            <select id="gender" class="border rounded-xl p-2">
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+            </select>
+            <input id="goalWeight" type="number" placeholder="Mục tiêu cân nặng (kg)" class="border rounded-xl p-2">
+            <input id="duration" type="number" placeholder="Thời gian (tháng)" class="border rounded-xl p-2">
+            <input id="frequency" type="number" placeholder="Số buổi tập/tuần" class="border rounded-xl p-2">
+            <div>
+                <label class="font-medium">Chọn tỷ lệ Macro (%)</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <input id="protein" type="number" placeholder="Protein" class="border rounded-xl p-2" value="30">
+                    <input id="carbs" type="number" placeholder="Carbs" class="border rounded-xl p-2" value="50">
+                    <input id="fats" type="number" placeholder="Fats" class="border rounded-xl p-2" value="20">
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <button onclick="generatePlan()" class="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded-2xl text-lg">✨ Tạo Kế Hoạch</button>
+        </div>
+
+        <div id="generatedPlan" class="hidden mt-8 bg-white p-8 rounded-2xl shadow-2xl border border-gray-200 relative">
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-3xl font-bold text-blue-600">🎯 Kế Hoạch Cá Nhân Hoàn Chỉnh</h2>
+                <div class="text-gray-500 text-xs">Ngày: <span id="displayDate">24/02/2025</span></div>
+            </div>
+            <div id="planContent" class="space-y-6">
+                <!-- Thông tin hội viên -->
+                <div class="bg-blue-50 p-4 rounded-xl">
+                    <h3 class="text-lg font-semibold text-blue-700 mb-2">👤 Thông Tin Hội Viên</h3>
+                    <p><span class="font-medium text-gray-700">Tên:</span> <span id="displayName" class="text-blue-800"></span></p>
+                    <p><span class="font-medium text-gray-700">Liên hệ:</span> <span id="displayContact" class="text-blue-800"></span></p>
+                </div>
+
+                <!-- Thông tin cơ bản -->
+                <div class="bg-green-50 p-4 rounded-xl">
+                    <h3 class="text-lg font-semibold text-green-700 mb-2">📊 Thông Tin Cơ Bản</h3>
+                    <p><span class="font-medium text-gray-700">Cân nặng:</span> <span id="displayWeight" class="text-green-800 font-bold"></span> kg</p>
+                    <p><span class="font-medium text-gray-700">Chiều cao:</span> <span id="displayHeight" class="text-green-800 font-bold"></span> cm</p>
+                    <p><span class="font-medium text-gray-700">Tuổi:</span> <span id="displayAge" class="text-green-800 font-bold"></span></p>
+                    <p><span class="font-medium text-gray-700">Giới tính:</span> <span id="displayGender" class="text-green-800 font-bold"></span></p>
+                    <p><span class="font-medium text-gray-700">BMI:</span> <span id="displayBMI" class="text-green-800 font-bold"></span></p>
+                </div>
+
+                <!-- Mục tiêu -->
+                <div class="bg-yellow-50 p-4 rounded-xl">
+                    <h3 class="text-lg font-semibold text-yellow-700 mb-2">🎯 Mục Tiêu</h3>
+                    <p><span class="font-medium text-gray-700">Loại mục tiêu:</span> <span id="displayGoalType" class="text-yellow-800 font-bold"></span></p>
+                    <p><span class="font-medium text-gray-700">Thay đổi cân nặng:</span> <span id="displayWeightChange" class="text-yellow-800 font-bold"></span> kg trong <span id="displayDuration" class="text-yellow-800 font-bold"></span> tháng</p>
+                    <p><span class="font-medium text-gray-700">Tốc độ thay đổi:</span> <span id="displayMonthlyChange" class="text-yellow-800 font-bold"></span> kg/tháng</p>
+                </div>
+
+                <!-- Kế hoạch dinh dưỡng -->
+                <div class="bg-purple-50 p-4 rounded-xl">
+                    <h3 class="text-lg font-semibold text-purple-700 mb-2">🍽️ Kế Hoạch Dinh Dưỡng</h3>
+                    <p><span class="font-medium text-gray-700">Calo mục tiêu:</span> <span id="displayCalTarget" class="text-purple-800 font-bold"></span> calo/ngày</p>
+                    <p><span class="font-medium text-gray-700">Protein:</span> <span id="displayProtein" class="text-purple-800 font-bold"></span> g</p>
+                    <p><span class="font-medium text-gray-700">Carbs:</span> <span id="displayCarbs" class="text-purple-800 font-bold"></span> g</p>
+                    <p><span class="font-medium text-gray-700">Fats:</span> <span id="displayFats" class="text-purple-800 font-bold"></span> g</p>
+                    <p><span class="font-medium text-gray-700">Nước uống:</span> <span id="displayWater" class="text-purple-800 font-bold"></span> L/ngày</p>
+                    <div class="mt-4 flex justify-center">
+                        <canvas id="macroChart" width="150" height="150"></canvas>
+                    </div>
+                </div>
+
+                <!-- Lịch tập luyện -->
+                <div class="bg-red-50 p-4 rounded-xl">
+                    <h3 class="text-lg font-semibold text-red-700 mb-2">🏋️ Lịch Tập Luyện</h3>
+                    <p><span class="font-medium text-gray-700">Tần suất:</span> <span id="displayFrequency" class="text-red-800 font-bold"></span> buổi/tuần</p>
+                </div>
+            </div>
+
+            <!-- Lưu ý -->
+            <div class="mt-6 border-t pt-4">
+                <h3 class="font-semibold text-lg text-gray-800 mb-2">🔑 Lưu Ý Từ Huấn Luyện Viên</h3>
+                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                    <li>Đảm bảo tỉ lệ Macro phù hợp với mục tiêu (Protein, Carbs, Fats).</li>
+                    <li>Duy trì chế độ ăn và tập luyện đều đặn.</li>
+                    <li>Kiểm tra tiến độ mỗi tháng để điều chỉnh kế hoạch.</li>
+                </ul>
+            </div>
+
+            <!-- Đề xuất thực phẩm bổ sung -->
+            <div class="mt-6 bg-orange-50 p-4 rounded-xl">
+                <h3 class="text-lg font-semibold text-orange-700 mb-2">💊 Đề Xuất Thực Phẩm Bổ Sung</h3>
+                <p class="text-orange-800">Để hỗ trợ tốt nhất cho kế hoạch của bạn, hãy thử các sản phẩm:</p>
+                <ul class="list-disc list-inside text-orange-800 space-y-1">
+                    <li><strong>Whey Protein:</strong> Giúp phục hồi cơ bắp nhanh chóng sau tập, cung cấp protein chất lượng cao.</li>
+                    <li><strong>BCAA:</strong> Giảm mệt mỏi, tăng sức bền trong suốt buổi tập.</li>
+                    <li><strong>Creatine:</strong> Tăng sức mạnh và hiệu suất, lý tưởng cho các bài tập nặng.</li>
+                </ul>
+                <p class="text-orange-800 mt-2">Kết hợp cả 3 để đạt hiệu quả tối ưu nhé!</p>
+            </div>
+
+            <!-- Lời khuyên -->
+            <div class="mt-6 bg-teal-50 p-4 rounded-xl">
+                <h3 class="text-lg font-semibold text-teal-700 mb-2">🤝 Lời Khuyên</h3>
+                <p id="advice" class="text-teal-800 italic"></p>
+            </div>
+
+            <!-- Watermark -->
+            <div class="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none flex items-center justify-center text-gray-400 text-2xl font-bold transform rotate-45">MDNG-30422</div>
+        </div>
+
+        <!-- Nút tải xuống -->
+        <div class="text-center mt-6">
+            <button onclick="downloadPNG()" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-2xl">📥 Tải Xuống PNG</button>
+        </div>
+    </div>
+
+    <script>
+        let macroChart;
+
+        function calculateBMI(weight, height) {
+            return (weight / Math.pow(height / 100, 2)).toFixed(1);
+        }
+
+        function determineGoal(weight, goalWeight) {
+            if (weight < goalWeight) return "Tăng cân";
+            if (weight > goalWeight) return "Giảm cân";
+            return "Duy trì";
+        }
+
+        function calculatePlan(weight, goalWeight, duration, proteinPercent, carbsPercent, fatsPercent) {
+            const totalChange = Math.abs(weight - goalWeight);
+            const monthlyChange = (totalChange / duration).toFixed(1);
+
+            const BMR = (weight * 22 * 1).toFixed(0);
+            const TDEE = (BMR * 1.55).toFixed(0);
+            const calTarget = (weight < goalWeight ? parseInt(TDEE) + 300 : parseInt(TDEE) - 500);
+            const protein = ((calTarget * (proteinPercent / 100)) / 4).toFixed(1);
+            const carbs = ((calTarget * (carbsPercent / 100)) / 4).toFixed(1);
+            const fats = ((calTarget * (fatsPercent / 100)) / 9).toFixed(1);
+            const water = (weight * 0.035).toFixed(1); // 35ml/kg
+
+            return { BMR, TDEE, calTarget, protein, carbs, fats, monthlyChange, water };
+        }
+
+        function generateAdvice(age, gender, goalType) {
+            let advice = "";
+            if (age && parseInt(age) > 30 && gender === "Nam" && goalType === "Tăng cân") {
+                advice = "Nếu bạn trên 30, hãy thử bổ sung thêm protein từ đậu hoặc hạt để vừa tăng cơ vừa dễ tiêu hóa nhé.";
+            } else if (gender === "Nữ" && goalType === "Giảm cân") {
+                advice = "Bạn nên ăn nhiều rau xanh và cắt bớt tinh bột không tốt để giảm cân hiệu quả hơn.";
+            } else if (goalType === "Duy trì") {
+                advice = "Giữ mọi thứ cân bằng thôi, vừa tập nhẹ nhàng vừa ăn đủ chất là ổn.";
+            } else if (age && parseInt(age) < 25) {
+                advice = "Trẻ khỏe thì tranh thủ tập mạnh một chút, cơ thể bạn đang rất sẵn sàng để phát triển đấy!";
+            } else {
+                advice = "Cứ bình tĩnh, từng bước điều chỉnh ăn uống và tập luyện là sẽ đạt mục tiêu thôi.";
+            }
+            return advice;
+        }
+
+        function generatePlan() {
+            const name = document.getElementById("name").value;
+            const contact = document.getElementById("contact").value;
+            const weight = parseFloat(document.getElementById("weight").value);
+            const height = parseFloat(document.getElementById("height").value);
+            const age = document.getElementById("age").value;
+            const gender = document.getElementById("gender").value;
+            const goalWeight = parseFloat(document.getElementById("goalWeight").value);
+            const duration = parseInt(document.getElementById("duration").value);
+            const frequency = parseInt(document.getElementById("frequency").value);
+            const proteinPercent = parseFloat(document.getElementById("protein").value);
+            const carbsPercent = parseFloat(document.getElementById("carbs").value);
+            const fatsPercent = parseFloat(document.getElementById("fats").value);
+
+            if (!weight || !height || !goalWeight || !duration || !frequency) {
+                alert("Vui lòng điền đầy đủ thông tin!");
+                return;
+            }
+
+            const bmi = calculateBMI(weight, height);
+            const goalType = determineGoal(weight, goalWeight);
+            const { calTarget, protein, carbs, fats, monthlyChange, water } = calculatePlan(weight, goalWeight, duration, proteinPercent, carbsPercent, fatsPercent);
+
+            document.getElementById("displayName").textContent = name || "Không xác định";
+            document.getElementById("displayContact").textContent = contact || "Không có";
+            document.getElementById("displayWeight").textContent = weight.toLocaleString();
+            document.getElementById("displayHeight").textContent = height.toLocaleString();
+            document.getElementById("displayAge").textContent = age || "Không xác định";
+            document.getElementById("displayGender").textContent = gender;
+            document.getElementById("displayBMI").textContent = bmi;
+            document.getElementById("displayGoalType").textContent = goalType;
+            document.getElementById("displayWeightChange").textContent = Math.abs(weight - goalWeight).toLocaleString();
+            document.getElementById("displayDuration").textContent = duration.toLocaleString();
+            document.getElementById("displayMonthlyChange").textContent = monthlyChange;
+            document.getElementById("displayCalTarget").textContent = calTarget.toLocaleString();
+            document.getElementById("displayProtein").textContent = protein;
+            document.getElementById("displayCarbs").textContent = carbs;
+            document.getElementById("displayFats").textContent = fats;
+            document.getElementById("displayFrequency").textContent = frequency.toLocaleString();
+            document.getElementById("displayWater").textContent = water;
+
+            // Ngày hiện tại
+            document.getElementById("displayDate").textContent = "24/02/2025";
+
+            // Lời khuyên
+            document.getElementById("advice").textContent = generateAdvice(age, gender, goalType);
+
+            // Tạo biểu đồ Macro
+            if (macroChart) macroChart.destroy();
+            const ctx = document.getElementById("macroChart").getContext("2d");
+            macroChart = new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: ["Protein", "Carbs", "Fats"],
+                    datasets: [{
+                        data: [proteinPercent, carbsPercent, fatsPercent],
+                        backgroundColor: ["#ff6384", "#36a2eb", "#ffce56"],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: { font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById("generatedPlan").classList.remove("hidden");
+        }
+
+        function downloadPNG() {
+            const planSection = document.getElementById("generatedPlan");
+            html2canvas(planSection).then((canvas) => {
+                const link = document.createElement("a");
+                link.download = "Ke_Hoach_Ca_Nhan.png";
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
